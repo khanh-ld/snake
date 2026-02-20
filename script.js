@@ -2,6 +2,7 @@ const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 const scoreEl = document.getElementById("score");
 const bestScoreEl = document.getElementById("best-score");
+const difficultyEl = document.getElementById("difficulty");
 const startBtn = document.getElementById("start-btn");
 const pauseBtn = document.getElementById("pause-btn");
 const restartBtn = document.getElementById("restart-btn");
@@ -9,7 +10,11 @@ const dirButtons = document.querySelectorAll(".dir");
 
 const GRID_SIZE = 20;
 const CELL = canvas.width / GRID_SIZE;
-const TICK_MS = 120;
+const SPEED_BY_LEVEL = {
+  easy: 180,
+  medium: 130,
+  hard: 90,
+};
 
 let snake = [];
 let direction = { x: 1, y: 0 };
@@ -19,6 +24,7 @@ let score = 0;
 let gameLoop = null;
 let isRunning = false;
 let isGameOver = false;
+let tickMs = SPEED_BY_LEVEL.easy;
 
 const BEST_KEY = "snake-best-score";
 let bestScore = Number(localStorage.getItem(BEST_KEY) || 0);
@@ -139,7 +145,7 @@ function draw() {
 function startGame() {
   if (isRunning || isGameOver) return;
   isRunning = true;
-  gameLoop = setInterval(update, TICK_MS);
+  gameLoop = setInterval(update, tickMs);
 }
 
 function stopGame() {
@@ -147,6 +153,16 @@ function stopGame() {
   if (gameLoop) {
     clearInterval(gameLoop);
     gameLoop = null;
+  }
+}
+
+function setDifficulty(level) {
+  const nextTick = SPEED_BY_LEVEL[level] || SPEED_BY_LEVEL.easy;
+  tickMs = nextTick;
+
+  if (isRunning) {
+    clearInterval(gameLoop);
+    gameLoop = setInterval(update, tickMs);
   }
 }
 
@@ -165,6 +181,10 @@ restartBtn.addEventListener("click", () => {
   resetGame();
 });
 
+difficultyEl.addEventListener("change", (event) => {
+  setDifficulty(event.target.value);
+});
+
 dirButtons.forEach((btn) => {
   btn.addEventListener("click", () => {
     const dir = btn.getAttribute("data-dir");
@@ -176,3 +196,4 @@ dirButtons.forEach((btn) => {
 });
 
 resetGame();
+setDifficulty(difficultyEl.value);
